@@ -37,12 +37,13 @@ namespace Entities
         
         private void MoveToTarget(GameObject currentTarget)
         {
-            Debug.Log("Got target!");
-            
-          
-
             _agent.destination = currentTarget.transform.position;
             _agent.transform.LookAt(currentTarget.transform);
+        }
+
+        private void OnMouseDown()
+        {
+            CameraController.instance.followTransform = transform;
         }
     }
 }

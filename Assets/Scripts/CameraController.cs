@@ -1,62 +1,133 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class CameraController : MonoBehaviour
 {
-    public Vector2 panLimit;
-    public float bottomOffset = -40f;
+    public static CameraController instance;
     
-    public float panSpeed = 100f;
-    public float scrollSpeed = 100f;
-    public float heightMoveSpeed = 100f;
+    public Transform followTransform;
+    public Transform cameraTransform;
     
-    public float minY = 40f;
-    public float maxY = 100f;
+    public float normalSpeed;
+    public float fastSpeed;
+    public float movementTime;
+    public float rotationAmount;
+    public Vector3 zoomAmount;
+    
+    private Vector3 _newPosition;
+    private Quaternion _newRotation;
+    private Vector3 _newZoom;
+    
+    private Vector3 _dragStartPosition;
+    private Vector3 _dragCurrentPosition;
 
+    private Vector3 _rotateStartPosition;
+    private Vector3 _rotateCurrentPosition;
+
+    private Camera _mainCamera;
+    
+    
     // Update is called once per frame
-    void Update()
+    private void Start()
     {
-        var cameraPosition = transform.position;
+        instance = this;
+        _newPosition = transform.position;
+        _newRotation = transform.rotation;
+        _newZoom = cameraTransform.localPosition;
+        _mainCamera = Camera.main;
+    }
 
-        var scaledPanSpeed = Input.GetKey(KeyCode.LeftControl) ? panSpeed * 1.2f : panSpeed;
-        scaledPanSpeed *= Mathf.Max(cameraPosition.y / maxY, 0.4f);
-
-        if (Input.GetKey(KeyCode.W))
+    private void Update()
+    {
+        if (followTransform != null)
         {
-            cameraPosition.z += scaledPanSpeed * Time.deltaTime;
+            transform.position = followTransform.position;
+        }
+        else
+        {
+            HandleMovementInput();
+            HandleMouseInput();   
+        }
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            followTransform = null;
+        }
+    }
+
+    private void HandleMouseInput()
+    {
+        if (Input.mouseScrollDelta.y != 0f)
+        {
+            _newZoom += Input.mouseScrollDelta.y * zoomAmount;
+        }
+
+        if (Input.GetMouseButtonDown(2))
+        {
+            _rotateStartPosition = Input.mousePosition;
+        }
+
+        if (Input.GetMouseButton(2))
+        {
+            _rotateCurrentPosition = Input.mousePosition;
+            var difference = _rotateStartPosition - _rotateCurrentPosition;
+
+            _rotateStartPosition = _rotateCurrentPosition;
+            
+            _newRotation *= Quaternion.Euler(Vector3.up * (-difference.x / 20f));
         }
         
-        if (Input.GetKey(KeyCode.S))
+    }
+
+    private void HandleMovementInput()
+    {
+        var movementSpeed = Input.GetKey(KeyCode.LeftShift) ? fastSpeed : normalSpeed;
+        
+        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
         {
-            cameraPosition.z -= scaledPanSpeed * Time.deltaTime;
+            _newPosition += (transform.forward * movementSpeed);
         }
-        if (Input.GetKey(KeyCode.D))
+
+        if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
         {
-            cameraPosition.x += scaledPanSpeed * Time.deltaTime;
+            _newPosition += (transform.forward * -movementSpeed);
+        }
+
+        if (Input.GetKey(KeyCode.D)  || Input.GetKey(KeyCode.RightArrow))
+        {
+            _newPosition += (transform.right * movementSpeed);
+        }
+
+        if (Input.GetKey(KeyCode.A)  || Input.GetKey(KeyCode.LeftArrow))
+        {
+            _newPosition += (transform.right * -movementSpeed);
+        }
+
+        if (Input.GetKey(KeyCode.Q))
+        {
+            _newRotation *= Quaternion.Euler(Vector3.up * rotationAmount);
         }
         
-        if (Input.GetKey(KeyCode.A))
+        if (Input.GetKey(KeyCode.E))
         {
-            cameraPosition.x -= scaledPanSpeed * Time.deltaTime;
+            _newRotation *= Quaternion.Euler(Vector3.up * -rotationAmount);
         }
 
-        if (Input.GetKey(KeyCode.LeftShift))
+        if (Input.GetKey(KeyCode.R))
         {
-            cameraPosition.y -= heightMoveSpeed * Time.deltaTime;
+            _newZoom += zoomAmount;
         }
-
-        if (Input.GetKey(KeyCode.Space))
-        {
-            cameraPosition.y += heightMoveSpeed * Time.deltaTime;
-        }
-
-        var scrollValue = Input.GetAxis("Mouse ScrollWheel");
-        cameraPosition.y -= scrollValue * scrollSpeed * 100f *  Time.deltaTime;
-        cameraPosition.y = Mathf.Clamp(cameraPosition.y, minY, maxY);
-    
-        cameraPosition.x = Mathf.Clamp(cameraPosition.x, 0, panLimit.x);
-        cameraPosition.z = Mathf.Clamp(cameraPosition.z, bottomOffset, panLimit.y);
         
-        transform.position = cameraPosition;
+        if (Input.GetKey(KeyCode.F))
+        {
+            _newZoom -= zoomAmount;
+        }
+
+        var lerpTime = 0.2f;
+        
+        transform.position = Vector3.Lerp(transform.position, _newPosition, lerpTime);
+        transform.rotation = Quaternion.Lerp(transform.rotation, _newRotation, lerpTime);
+        cameraTransform.localPosition = Vector3.Lerp(cameraTransform.localPosition, _newZoom, lerpTime);
     }
 }
