@@ -15,6 +15,11 @@ public class CameraController : MonoBehaviour
     public float rotationAmount;
     public Vector3 zoomAmount;
     
+    public float minY;
+    public float maxY;
+    public float minZ;
+    public float maxZ;
+    
     private Vector3 _newPosition;
     private Quaternion _newRotation;
     private Vector3 _newZoom;
@@ -60,7 +65,12 @@ public class CameraController : MonoBehaviour
     {
         if (Input.mouseScrollDelta.y != 0f)
         {
-            _newZoom += Input.mouseScrollDelta.y * zoomAmount;
+            var nextValue = _newZoom + Input.mouseScrollDelta.y * zoomAmount;
+
+            if (nextValue.z >= minZ && nextValue.z <= maxZ && nextValue.y >= minY && nextValue.y <= maxY)
+            {
+                _newZoom += Input.mouseScrollDelta.y * zoomAmount;
+            }
         }
 
         if (Input.GetMouseButtonDown(2))
@@ -123,7 +133,7 @@ public class CameraController : MonoBehaviour
         {
             _newZoom -= zoomAmount;
         }
-
+        
         var lerpTime = 0.2f;
         
         transform.position = Vector3.Lerp(transform.position, _newPosition, lerpTime);

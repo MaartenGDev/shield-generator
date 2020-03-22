@@ -8,7 +8,7 @@ namespace State
     {
         public static GameEventStore Instance;
 
-        private void Awake()
+        private void Start()
         {
             Instance = this;
         }
