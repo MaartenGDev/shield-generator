@@ -13,7 +13,6 @@ namespace Entities
         public Transform launchStartLocation;
         public LayerMask layer;
 
-        private bool _shouldRefreshTargetCache = true;
         private List<GameObject> _cachedTargets = new List<GameObject>();
 
         private void Awake()
