@@ -16,16 +16,14 @@ namespace Entities
         {
             _agent = GetComponent<NavMeshAgent>();
 
-            AttackNextTarget(null);
-
-            GameEventStore.Instance.OnBuildingDestroyed += AttackNextTarget;
+            AttackNextTarget();
         }
 
-        private void AttackNextTarget(GameObject deletedGameObject)
+        private void AttackNextTarget()
         {
             var possibleTargets = GameObject
                 .FindGameObjectsWithTag("Building")
-                .Where(target => target != deletedGameObject && Vector3.Distance(target.transform.position, transform.position) < aggressionRange)
+                .Where(target => Vector3.Distance(target.transform.position, transform.position) < aggressionRange)
                 .OrderByDescending(x => x.GetComponent<Building>().importance)
                 .ToList();
 
